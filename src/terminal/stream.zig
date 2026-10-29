@@ -118,6 +118,7 @@ pub const Action = union(Key) {
     active_status_display: ansi.StatusDisplay,
     decaln,
     window_title: WindowTitle,
+    tab_title: WindowTitle,
     report_pwd: ReportPwd,
     show_desktop_notification: ShowDesktopNotification,
     progress_report: osc.Command.ProgressReport,
@@ -226,6 +227,7 @@ pub const Action = union(Key) {
             "active_status_display",
             "decaln",
             "window_title",
+            "tab_title",
             "report_pwd",
             "show_desktop_notification",
             "progress_report",
@@ -2954,9 +2956,20 @@ pub fn Stream(comptime H: type) type {
                     self.handler.vt(.osc_unknown, v);
                 },
 
+                .conemu_change_tab_title => |v| {
+                    const title: [:0]const u8 = switch (v) {
+                        .reset => "",
+                        .value => |value| value,
+                    };
+                    if (title.len > 0 and !std.unicode.utf8ValidateSlice(title)) {
+                        log.warn("change tab title request: invalid utf-8, ignoring request", .{});
+                        return;
+                    }
+                    self.handler.vt(.tab_title, .{ .title = title });
+                },
+
                 .conemu_sleep,
                 .conemu_show_message_box,
-                .conemu_change_tab_title,
                 .conemu_wait_input,
                 .conemu_guimacro,
                 .conemu_comment,

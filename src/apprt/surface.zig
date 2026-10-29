@@ -63,6 +63,9 @@ pub const Message = union(enum) {
     /// of any length
     set_title: [256]u8,
 
+    /// Set the title override of the surface's tab.
+    set_tab_title: [256]u8,
+
     /// Report the window title back to the terminal
     report_title: ReportTitleStyle,
 

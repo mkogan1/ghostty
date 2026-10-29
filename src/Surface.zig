@@ -1036,6 +1036,18 @@ pub fn handleMessage(self: *Surface, msg: Message) !void {
             );
         },
 
+        .set_tab_title => |*v| {
+            // The ptrCast just gets sliceTo to return the proper type.
+            // We know that our title should end in 0.
+            const slice = std.mem.sliceTo(@as([*:0]const u8, @ptrCast(v)), 0);
+            log.debug("changing tab title override \"{s}\"", .{slice});
+            _ = try self.rt_app.performAction(
+                .{ .surface = self },
+                .set_tab_title,
+                .{ .title = slice },
+            );
+        },
+
         .report_title => |style| report_title: {
             if (!self.config.title_report) {
                 log.info("report_title requested, but disabled via config", .{});

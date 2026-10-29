@@ -713,6 +713,9 @@ pub const Window = extern struct {
         // Remainder uses the config
         const config = if (priv.config) |v| v.get() else return;
 
+        // Re-sync our title in case the window-title config changed.
+        self.syncTitle();
+
         // Only add a solid background if we're opaque.
         self.toggleCssClass(
             "background",
@@ -1354,6 +1357,31 @@ pub const Window = extern struct {
         });
     }
 
+    /// Sync the window title. If `window-title` is configured, the window
+    /// title is pinned to that value and decoupled from the tabs. Otherwise
+    /// the window title follows the active tab's title.
+    fn syncTitle(self: *Self) void {
+        const priv = self.private();
+        const config = if (priv.config) |v| v.get() else return;
+
+        // If a fixed window title is configured, detach the tab title
+        // binding so tab changes can't override it.
+        if (config.@"window-title") |title| {
+            priv.tab_bindings.setSource(null);
+            self.as(gtk.Window).setTitle(title);
+            return;
+        }
+
+        // No fixed window title; sync from the active tab, if any.
+        const page = priv.tab_view.getSelectedPage() orelse {
+            priv.tab_bindings.setSource(null);
+            return;
+        };
+        const child = page.getChild();
+        assert(gobject.ext.isA(child, Tab));
+        priv.tab_bindings.setSource(child.as(gobject.Object));
+    }
+
     pub fn setTitleOverride(self: *Self, title: ?[]const u8) void {
         const priv: *Private = self.private();
 
@@ -1712,9 +1740,9 @@ pub const Window = extern struct {
         const child = page.getChild();
         assert(gobject.ext.isA(child, Tab));
 
-        // Setup our binding group. This ensures things like the title
-        // are synced from the active tab.
-        priv.tab_bindings.setSource(child.as(gobject.Object));
+        // Sync the window title from the active tab (unless a fixed
+        // window title is configured).
+        self.syncTitle();
 
         // If the tab was previously marked as needing attention
         // (e.g. due to a bell character), we now unmark that

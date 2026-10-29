@@ -1540,6 +1540,18 @@ fullscreen: Fullscreen = .false,
 /// to get the new title.
 title: ?[:0]const u8 = null,
 
+/// The title Ghostty will use for the window at the window manager level
+/// (the title shown by the compositor, taskbar, window pager, Alt-Tab, etc.).
+///
+/// Unlike `title`, this does not suppress title escape sequences and does
+/// not affect tab titles: tabs continue to show (and programs continue to be
+/// able to change) their own titles. If this is unset, the window title
+/// follows the active tab's title.
+///
+/// This is only supported on Linux (GTK). This configuration can be reloaded
+/// at runtime.
+@"window-title": ?[:0]const u8 = null,
+
 /// The setting that will change the application class value.
 ///
 /// This controls the class field of the `WM_CLASS` X11 property (when running

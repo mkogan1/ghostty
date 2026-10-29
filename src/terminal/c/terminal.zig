@@ -869,6 +869,7 @@ fn wrap(
         .enquiry = &Effects.enquiryTrampoline,
         .xtversion = &Effects.xtversionTrampoline,
         .title_changed = &Effects.titleChangedTrampoline,
+        .tab_title_changed = null,
         .pwd_changed = &Effects.pwdChangedTrampoline,
         .progress_report = &Effects.progressReportTrampoline,
         .semantic_prompt = &Effects.semanticPromptTrampoline,

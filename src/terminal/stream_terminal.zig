@@ -213,6 +213,12 @@ pub const Handler = struct {
         /// handler.terminal.getTitle().
         title_changed: ?*const fn (*Handler) void,
 
+        /// Called when a program requests a sticky tab title via OSC 9;3
+        /// (ConEmu tab title). The title is borrowed and only valid for
+        /// the duration of the callback. An empty title means "clear the
+        /// tab title override".
+        tab_title_changed: ?*const fn (*Handler, []const u8) void,
+
         /// Called when the terminal pwd changes via escape sequences
         /// (e.g. OSC 7). The new pwd can be queried via
         /// handler.terminal.getPwd().
@@ -352,6 +358,7 @@ pub const Handler = struct {
             .size = null,
             .render_hold = null,
             .title_changed = null,
+            .tab_title_changed = null,
             .pwd_changed = null,
             .write_pty = null,
             .xtversion = null,
@@ -782,6 +789,7 @@ pub const Handler = struct {
             .request_mode_unknown => self.requestModeUnknown(value.mode, value.ansi),
             .size_report => self.reportSize(value),
             .window_title => try self.windowTitle(value.title),
+            .tab_title => try self.tabTitle(value.title),
             .report_pwd => try self.reportPwd(value.url),
             .progress_report => self.progressReport(value),
             .program_status => self.programStatus(value),
@@ -1900,6 +1908,11 @@ pub const Handler = struct {
 
         const func = self.effects.title_changed orelse return;
         func(self);
+    }
+
+    fn tabTitle(self: *Handler, title: []const u8) !void {
+        const func = self.effects.tab_title_changed orelse return;
+        func(self, title);
     }
 
     fn reportPwd(self: *Handler, url_raw: []const u8) !void {

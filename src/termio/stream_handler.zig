@@ -342,6 +342,7 @@ pub const StreamHandler = struct {
             .active_status_display => self.terminal.status_display = value,
             .decaln => try self.decaln(),
             .window_title => try self.windowTitle(value.title),
+            .tab_title => try self.tabTitle(value.title),
             .report_pwd => try self.reportPwd(value.url),
             .show_desktop_notification => try self.showDesktopNotification(value.title, value.body),
             .progress_report => self.progressReport(value),
@@ -1024,6 +1025,20 @@ pub const StreamHandler = struct {
 
         self.seen_title = true;
         self.surfaceMessageWriter(.{ .set_title = buf });
+    }
+
+    fn tabTitle(self: *StreamHandler, title: []const u8) !void {
+        var buf: [256]u8 = undefined;
+        if (title.len >= buf.len) {
+            log.warn("change tab title requested larger than our buffer size, ignoring", .{});
+            return;
+        }
+
+        @memcpy(buf[0..title.len], title);
+        buf[title.len] = 0;
+
+        // An empty title clears the tab title override.
+        self.surfaceMessageWriter(.{ .set_tab_title = buf });
     }
 
     inline fn setMouseShape(
